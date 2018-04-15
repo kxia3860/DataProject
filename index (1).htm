@@ -1,0 +1,188 @@
+<!doctype HTML>
+<html>
+    <head>
+        <title> NYC WiFi Hotspot Locations </title>
+
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        
+        <link href="https://fonts.googleapis.com/css?family=Rajdhani" rel="stylesheet">
+
+        <style>
+            #display{
+                background-color: #1A181B;    
+            }
+
+            #display h1{
+                font-family: 'Rajdhani', sans-serif;
+                /*color: #FCFAFA;*/
+                color: rgb(46, 46, 46);
+            }
+            #display .jumbotron{
+                text-align: center;
+                height:300px;
+                /*background-color: #637074;*/
+                background-image: url("https://homecontrol.no/blog/wp-content/uploads/2016/11/smart_city.jpg.800x600_q96.png");
+                background-size: auto 300px;
+            }
+
+            #display .panel-heading{
+                /*background-color: rgba(170, 210, 255, 0.37);*/
+                background-image: url("https://media.gettyimages.com/videos/hexagonal-blue-background-video-id526112735?s=640x640");
+            }
+            #display .panel-heading h2, #display .panel-heading b{
+                color: rgb(44, 44, 45);
+            }
+            #individualResults .panel-heading p{
+                color: rgb(52, 52, 56);
+            }
+
+            #display .btn-success{
+                margin-bottom: 5px;
+            }
+
+            
+            #output div{
+                text-align: center;
+                margin: 4px;
+            }
+
+            #individualResults{
+                border: 1px solid black;
+            }
+
+            #individualResults b{
+                color: rgb(24, 24, 24);
+            }
+
+            #individualResults p{
+                color: rgb(8, 189, 96);
+            }
+
+            #scroll{
+                height: 600px;
+                overflow-y: scroll;
+                margin-bottom: 5px;
+            }
+
+            #scroll::-webkit-scrollbar {
+                width: 8px;
+            }
+            #scroll::-webkit-scrollbar-track {
+                background: #1A181B; 
+            }
+            #scroll::-webkit-scrollbar-thumb {
+                background: #888;
+                border-radius: 8px;
+            }
+            #scroll::-webkit-scrollbar-thumb:hover {
+                background: #555; 
+            }
+
+            #googleMap{
+                height: 600px;
+                margin: 5px;
+                /*background-image: url("https://upload.wikimedia.org/wikipedia/commons/e/ec/World_map_blank_without_borders.svg");
+                background-repeat: no-repeat;
+                background-size: 100%;*/
+            }
+
+        </style>
+
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/mustache.js/2.3.0/mustache.min.js"></script>
+        <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCLm6bgdV4xi92BkkS-a7j2voBBHJc9dVQ"></script>
+        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+
+        <script type="text/template" id="locationTemplate">
+            <div class = "panel panel-default" id="individualResults">
+                <div class="panel-heading">
+                    <h2> {{name}} </h2>
+                    <p> {{location}}, {{location_t}}</p>
+                    <p> <b>Borough:</b> {{boroname}}, {{zip}} </p>
+                </div>
+                <div class="panel-body">
+                    <p> <b>Name of WiFi on Device:</b> {{ssid}} </p>
+                    <p> <b>Provider:</b> {{provider}} </p>
+                    <p> <b>Type:</b> {{type}} </p>
+                    <p> <b>Remarks:</b> {{remarks}} </p>
+                </div>
+                
+                <button onclick = "GoogleMap({{latitude}}, {{longitude}})" class="btn btn-success"> Map <span class="glyphicon glyphicon-map-marker"></span></button>
+
+            </div>
+        </script>
+
+        <script>
+            /*
+            A. Zheng and K. Xia
+            19 March 2018
+
+            You and a partner will create a web page that uses data from any of the datasets available at the the NYC Open Data site.
+            - Your work must include JavaScript with Mustache, jQuery, HTML and CSS.
+            - You must display a stand-alone Google Map (within a container) using location information.
+            - Extra credit for teams that use features such as Bootstrap (a framework for responsive web design)
+
+             Department of Information Technology & Telecommunications (DoITT): NYC Wi-Fi Hotspot Locations, https://data.cityofnewyork.us/resource/24t3-xqyv.json
+            
+            Research Bootstrap: Jumbotron, Button, Panel, Images, Collapse, Dropdown, Carousel
+            */
+
+            
+            function data_WifiHotspotLocations(){
+                $.getJSON("https://data.cityofnewyork.us/resource/24t3-xqyv.json", function(result){
+                    WifiHotspotLocations(result);
+                });
+            }
+            
+            function WifiHotspotLocations(data){
+                var build = "";
+                var op = document.getElementById("output");
+                var boroughInput = document.getElementById("boroughSearch").value;
+                
+                var template = document.getElementById("locationTemplate").innerHTML;
+
+                build += "<div id='scroll'>";
+                for (var i=0; i<data.length; i++){
+                    if ( data[i].boroname.toLowerCase().indexOf(boroughInput.toLowerCase()) != -1 ){
+                        build += Mustache.render(template,data[i]);
+                    }
+                }
+                build += "</div>";
+
+                op.innerHTML = build;
+            }
+            
+            function GoogleMap(latitude, longitude){
+                var gMap = document.getElementById("googleMap");
+                var mapProp = {
+                    center: new google.maps.LatLng(latitude, longitude),
+                    zoom: 18,
+                }
+
+                var map=new google.maps.Map(gMap,mapProp);
+            }
+
+        </script>
+
+    </head>
+
+    <body id = "display">
+        <div class = "jumbotron">
+            <h1>FREE HOTSPOT LOCATIONS IN NYC</h1>
+            <input type="text" id="boroughSearch" placeholder="Enter a borough">
+            <button onclick="data_WifiHotspotLocations()" class="btn"> Show Wifi Hotspot Locations <span class="glyphicon glyphicon-signal"></span> </button>
+        </div>
+
+        <!-- .container fluid class provides a full width container, spanning the entire width of the viewport (.container class has a fixed width) -->
+        <div class = "container-fluid">
+            <div class = "row">
+                <div class = "col-sm-4" id = "output"></div>
+                <div class = "col-sm-8">
+                    <div id = "googleMap"></div>
+                </div>
+            </div>
+        </div>
+    </body>
+</html>
